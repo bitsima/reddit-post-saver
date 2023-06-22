@@ -1,8 +1,8 @@
-
-
 import sqlite3
 import logging
+from logging_config import logging_config
 
+logging_config.configure_logging()
 logger = logging.getLogger(__name__)
 
 
@@ -13,8 +13,8 @@ def create_db():
 
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS posts (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            subreddit TEXT
+            postID TEXT PRIMARY KEY ,
+            subreddit TEXT,
             title TEXT,
             author TEXT,
             content TEXT,
@@ -37,7 +37,7 @@ def create_db():
 
     if not exists:
         # logging
-        logger.info("Created tables 'posts' and 'subreddits' in the database")
+        logger.info("Created tables 'posts' and 'subreddits' in the database.")
     else:
         logger.info("Tables 'posts' and 'subreddits' already present.")
 
@@ -49,11 +49,11 @@ def add_to_db(submission):
     conn = sqlite3.connect('posts.db')
     cursor = conn.cursor()
 
-    cursor.execute("INSERT INTO posts (subreddit, title, author, content, posting_date, up_count, upvote_ratio) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                   (submission.subreddit.name, submission.title, submission.author, submission.selftext, submission.created_utc, submission.score, submission.upvote_ratio))
+    cursor.execute("INSERT INTO posts (postID, subreddit, title, author, content, posting_date, up_count, upvote_ratio) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                   (submission.id, submission.subreddit.display_name, submission.title, submission.author.name, submission.selftext, submission.created_utc, submission.score, submission.upvote_ratio))
     # logging
     logger.info(
-        f"Added new post by '{submission.author}' in subreddit '{submission.subreddit.name}' to the database")
+        f"Added new post by '{submission.author}' in subreddit '{submission.subreddit.name}' to the database.")
 
     conn.commit()
     conn.close()
@@ -69,7 +69,7 @@ def add_subreddit(name):
     conn.close()
 
     # logging
-    logger.info(f"Added new subreddit '{name}' to the subreddit table")
+    logger.info(f"Added new subreddit '{name}' to the subreddit table.")
 
 
 def remove_subreddit(name):
@@ -82,10 +82,10 @@ def remove_subreddit(name):
     conn.close()
 
     # logging
-    logger.info(f"Removed subreddit '{name}' from the subreddits table")
+    logger.info(f"Removed subreddit '{name}' from the subreddits table.")
 
 
-def remove_from_db(subreddit_name):
+def remove_posts(subreddit_name):
     conn = sqlite3.connect('posts.db')
     cursor = conn.cursor()
 
@@ -96,20 +96,37 @@ def remove_from_db(subreddit_name):
 
     # logging
     logger.info(
-        f"Deleted all saved posts from the subreddit '{subreddit_name}' from the posts table")
+        f"Deleted all saved posts from the subreddit '{subreddit_name}' from the posts table.")
 
 
 def get_subreddits_list():
     conn = sqlite3.connect('posts.db')
     cursor = conn.cursor()
 
-    cursor.execute("SELECT * FROM subreddits")
+    cursor.execute("SELECT subreddit FROM subreddits")
     subreddits = cursor.fetchall()
-
+    subreddits = ["".join(x) for x in subreddits]
     # logging
-    logger.info("Fetched the tracked subreddits list from the subreddits table")
+    logger.info("Fetched the tracked subreddits list from the subreddits table.")
 
     return subreddits
+
+
+def get_latest_post_id(name):
+    conn = sqlite3.connect('posts.db')
+    cursor = conn.cursor()
+
+    cursor.execute(
+        f"SELECT postID FROM posts WHERE subreddit = ? ORDER BY posting_date DESC", (name,))
+    rows = cursor.fetchall()
+
+    if len(rows) == 0:
+        return "0"
+
+    # logging
+    logger.info(f"Fetched latest post for the subreddit '{name}'.")
+
+    return list(rows[0])[0]
 
 
 def print_posts_from_subreddit_db(name):
@@ -119,9 +136,9 @@ def print_posts_from_subreddit_db(name):
     cursor.execute("SELECT * FROM posts WHERE subreddit = ?", (name,))
     rows = cursor.fetchall()
 
-    ##### buraya ayar çekmek lazım #########
-    for col in rows[:10]:
-        print(col)
+    for row in rows[:10]:
+        for col in row:
+            print(col)
 
     # logging
-    logger.info(f"Printed last 10 saved posts from the subreddit '{name}'")
+    logger.info(f"Printed last 10 saved posts from the subreddit '{name}'.")

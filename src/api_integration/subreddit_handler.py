@@ -1,6 +1,7 @@
-from ..database_handling import database_handler
 import logging
+from logging_config import logging_config
 
+logging_config.configure_logging()
 logger = logging.getLogger(__name__)
 
 
@@ -10,7 +11,7 @@ def subreddit_search(reddit):
         "Please provide a keyword for the subreddit you want to search for: ")
 
     # logging
-    logger.info(f"Started search for subreddit named {subreddit}")
+    logger.info(f"Started search for subreddit named '{subreddit}'.")
 
     subreddits = reddit.subreddits.search_by_name(subreddit)
     subreddits_dict = dict()
@@ -27,7 +28,7 @@ def subreddit_search(reddit):
     subreddit = reddit.subreddit(subreddits_dict[number].title)
 
     # logging
-    logger.info(f"Chosen subreddit {subreddit.title}")
+    logger.info(f"Chosen subreddit '{subreddit.title}'.")
 
     return subreddit
 
@@ -44,7 +45,7 @@ def fetch_new_posts(subreddit):
 
     # logging
     logger.info(
-        f"Fetched and printed last 10 posts from subreddit {subreddit.title}")
+        f"Fetched and printed last 10 posts from subreddit '{subreddit.title}'.")
 
 
 def print_posts(submission):
