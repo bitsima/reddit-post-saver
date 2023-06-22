@@ -20,7 +20,7 @@ https://www.reddit.com/prefs/apps/
 
  - Then just run the main.py.
 
-# TODO Ideas For the future (maybe):
+# TODO Ideas for the future (maybe):
  - Testing
  - Creating the docker image of the project
  - Proper documentation and docstrings
