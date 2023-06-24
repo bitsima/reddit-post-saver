@@ -1,21 +1,32 @@
+'''
+Provide the real-time check functionality to the app.
+
+Functions:
+
+real_time_check(reddit: praw.Reddit) -> None
+
+'''
 import time
 import logging
+import praw
 from database_handling import database_handler
 from logging_config import logging_config
 
+# configuring the Logger object for the module
 logging_config.configure_logging()
 logger = logging.getLogger(__name__)
 
 
-def real_time_check(reddit):
+def real_time_check(reddit: praw.Reddit) -> None:
+    '''Works in the background in order to check the tracked subreddits for new posts each new second passed.'''
 
     # logging
     logger.info("Real-time check started with 1 second interval.")
 
     while True:
         subreddits_list = database_handler.get_subreddits_list()
-        for sub in subreddits_list:
 
+        for sub in subreddits_list:
             posts_reddit = reddit.subreddit(sub).new()
             latest_post_id = database_handler.get_latest_post_id(sub)
 

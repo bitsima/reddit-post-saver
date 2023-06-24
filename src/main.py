@@ -20,6 +20,7 @@ reddit = praw.Reddit("account")
 
 def main():
 
+    # keeping the tracked subreddit list up to date with the database
     tracked_subreddits = database_handler.get_subreddits_list()
     print("-----------------------------------")
     choice = input("""1 - Add a subreddit to the tracking list
@@ -29,14 +30,15 @@ def main():
 5 - Show the last 10 posts from a subreddit
 6 - Show the last saved 10 posts from a subreddit in the tracking list
 Please choose the action you desire (Enter a number):\n""")
+
     match choice:
-        case "1":
+        case "1":  # Add a subreddit to the tracking list
             sub = subreddit_handler.subreddit_search(reddit).title
             if sub not in tracked_subreddits:
                 database_handler.add_subreddit(sub.lower())
             else:
                 print("Already in the tracking list!")
-        case "2":
+        case "2":  # Remove a subreddit from the tracking list
             counter = 0
             for sub in tracked_subreddits:
                 counter += 1
@@ -48,7 +50,7 @@ Please choose the action you desire (Enter a number):\n""")
                     tracked_subreddits[subIndex])
             except IndexError:
                 print("Not a valid number!")
-        case "3":
+        case "3":  # Delete saved posts from a specific subreddit
             counter = 0
             for sub in tracked_subreddits:
                 counter += 1
@@ -65,14 +67,14 @@ Please choose the action you desire (Enter a number):\n""")
             if answer == "y":
                 database_handler.remove_subreddit(sub)
                 database_handler.remove_posts(sub)
-        case "4":
+        case "4":  # Show the subreddits in the tracking list
             print("Here's the tracked subreddits list:")
             for sub in tracked_subreddits:
                 print(sub)
-        case "5":
+        case "5":  # Show the last 10 posts from a subreddit
             sub = subreddit_handler.subreddit_search(reddit)
             subreddit_handler.fetch_new_posts(sub)
-        case "6":
+        case "6":  # Show the last saved 10 posts from a subreddit in the tracking list
             counter = 0
             for sub in tracked_subreddits:
                 counter += 1
@@ -93,7 +95,7 @@ Please choose the action you desire (Enter a number):\n""")
 if __name__ == "__main__":
     t1 = threading.Thread(target=threader.real_time_check, args=(reddit,))
     t1.start()
-    while True:
+    while True:  # we need the checks to run as long as the program is running
         try:
             main()
         except Exception as error:
