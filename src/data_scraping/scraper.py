@@ -5,6 +5,13 @@ import requests
 import re
 import time
 import json
+import logging
+
+from logging_config import logging_config
+
+# configuring the Logger object for the module
+logging_config.configure_logging()
+logger = logging.getLogger(__name__)
 
 soup = ""
 posts_list = []
@@ -46,6 +53,10 @@ def get_main_page(subreddit_name: str) -> None:
 
         time.sleep(1)
 
+    # logging
+    logger.info(
+        f"Retrieved main page of subreddit '{subreddit_name}' with user agent '{the_user_agent}'.")
+
 
 def get_latest_posts(last_post_id: str, subreddit: str) -> list[Post]:
     '''Returns the latest posts up until the last saved post, as a list.'''
@@ -61,6 +72,9 @@ def get_latest_posts(last_post_id: str, subreddit: str) -> list[Post]:
 
         new_post = Post(container_class, subreddit)
         new_posts.append(new_post)
+
+    # logging
+    logger.info(f"Parsed '{len(new_posts)}' new posts.")
 
     return new_posts
 
