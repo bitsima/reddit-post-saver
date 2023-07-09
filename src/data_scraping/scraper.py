@@ -78,6 +78,16 @@ def get_latest_posts(last_post_id: str, subreddit: str) -> list[Post]:
 
     return new_posts
 
+def get_last_post(subreddit: str) -> Post:
+    '''Returns the newest post in the subreddit as a Post instance.'''
+    id = posts_list[0]['data']['name']
+    
+    # fixed reddit class name for post-containers
+    container_class = "_1oQyIsiPHYt6nx7VOmd1sz _1RYN-7H8gYctjOQeL8p2Q7 scrollerItem _3Qkp11fjcAw9I9wtLo8frE _1qftyZQ2bhqP62lbPjoGAh " + id
+
+    new_post = Post(container_class, subreddit)
+    
+    return new_post
 
 class Post:
     def __init__(self, container_class: str, subreddit: str):
