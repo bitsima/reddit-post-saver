@@ -28,7 +28,7 @@ def get_main_page(subreddit_name: str) -> None:
 
         url = f"https://www.reddit.com/r/{subreddit_name}/new/"
 
-        # json data is used to retrieve author names of the posts
+        # json data is used to retrieve author names of the posts and getting latest posts
         url_2 = f"https://www.reddit.com/r/{subreddit_name}/new/.json"
 
         # getting the json data of the main page
@@ -47,10 +47,22 @@ def get_main_page(subreddit_name: str) -> None:
         time.sleep(1)
 
 
-def get_latest_posts(last_post_id: str):
+def get_latest_posts(last_post_id: str, subreddit: str) -> list[Post]:
     '''Returns the latest posts up until the last saved post, as a list.'''
+    new_posts = []
 
-    # while post_id != last_post_id:
+    for post in posts_list:
+        id = post['data']['name']
+        if id == last_post_id:
+            break
+
+        # fixed reddit class name for post-containers
+        container_class = "_1oQyIsiPHYt6nx7VOmd1sz _1RYN-7H8gYctjOQeL8p2Q7 scrollerItem _3Qkp11fjcAw9I9wtLo8frE _1qftyZQ2bhqP62lbPjoGAh " + id
+
+        new_post = Post(container_class, subreddit)
+        new_posts.append(new_post)
+
+    return new_posts
 
 
 class Post:
