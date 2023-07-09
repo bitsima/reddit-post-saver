@@ -35,14 +35,12 @@ def get_main_page(subreddit_name: str) -> None:
 
         url = f"https://www.reddit.com/r/{subreddit_name}/new/"
 
-        # json data is used to retrieve author names of the posts and getting latest posts
-        url_2 = f"https://www.reddit.com/r/{subreddit_name}/new/.json"
-
-        # getting the json data of the main page
-        json_data = requests.get(url_2, headers=headers).text
+        response = requests.get(url, headers=headers)
 
         # getting the html data of the main page
-        html_text = requests.get(url, headers=headers).text
+        html_text = response.text
+        # json data is used to retrieve author names of the posts and getting latest posts
+        json_data = response.json()
 
         posts_list = json.loads(json_data)['data']['children']
         soup = BeautifulSoup(html_text, "lxml")
