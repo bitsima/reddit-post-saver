@@ -36,14 +36,13 @@ def create_db() -> None:
 
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS posts (
-            postID TEXT PRIMARY KEY ,
+            postID TEXT PRIMARY KEY,
             subreddit TEXT,
-            post_container_class TEXT,
             title TEXT,
             author TEXT,
             content TEXT,
             timestamp TEXT,
-            up_count INTEGER,
+            up_count TEXT
         )
     ''')
 
@@ -72,8 +71,8 @@ def add_to_db(post: scraper.Post) -> None:
     conn = sqlite3.connect('posts.db')
     cursor = conn.cursor()
 
-    cursor.execute("INSERT INTO posts (postID, subreddit, post_container_class, title, author, content, timestamp, up_count) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                   (post.post_id, post.subreddit, post.container_class, post.title, post.author, post.content, post.time_posted, post.upvotes))
+    cursor.execute("INSERT INTO posts (postID, subreddit, title, author, content, timestamp, up_count) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                   (post.post_id, post.subreddit, post.title, post.author, post.content, post.time_posted, post.upvotes))
     # logging
     logger.info(
         f"Added new post by '{post.author}' in subreddit '{post.subreddit}' to the database.")
@@ -172,16 +171,21 @@ def print_posts_from_subreddit_db(name: str) -> None:
 
     cursor.execute("SELECT * FROM posts WHERE subreddit = ?", (name,))
     rows = cursor.fetchall()
-    '''rows = [('postID', 'subreddit', 'post_container_class', 'title', 'author', 'content',
+    '''rows = [('postID', 'subreddit', 'title', 'author', 'content',
                 'timestamp', 'up_count'),]'''
+    if len(rows) == 0:
+        print(f"There are no saved posts from subreddit '{name}', yet.")
 
     for row in rows[:10]:
-        timestamp = int(row[6])
+        timestamp = float(row[5])
+        upcount = row[6]
+        if upcount == "Vote":
+            upcount = 0
         date = datetime.fromtimestamp(timestamp)
-        print(f"""postID: {row[0]}    in subreddit: {row[1]}  by author: {row[4]} posted on UTC: {date}
-            {row[3]}
-            {row[5]}
-            up_count: {row[7]}""")
+        print(f"""postID: {row[0]}    in subreddit: {row[1]}  by author: {row[3]} posted on UTC: {date}
+            {row[2]}
+            {row[4]}
+            up_count: {upcount}""")
 
     # logging
     logger.info(f"Printed last 10 saved posts from the subreddit '{name}'.")

@@ -40,8 +40,8 @@ def get_main_page(subreddit_name: str) -> int:
 
         # getting the json data of the main page
         response = requests.get(url_2, headers=headers)
-        
-        #making sure subreddit name is true
+
+        # making sure subreddit name is true
         if response.status_code != 200:
             return 1
 
@@ -56,16 +56,14 @@ def get_main_page(subreddit_name: str) -> int:
         post = soup.find("div", class_=re.compile(
             r'^_1oQyIsiPHYt6nx7VOmd1sz _1RYN-7H8gYctjOQeL8p2Q7 scrollerItem _3Qkp11fjcAw9I9wtLo8frE _1qftyZQ2bhqP62lbPjoGAh.+'))
 
-        time.sleep(1)
-
+        time.sleep(0.2)
     # logging
     logger.info(
         f"Retrieved main page of subreddit '{subreddit_name}' with user agent '{the_user_agent}'.")
-
     return 0
 
 
-def get_latest_posts(last_post_id: str, subreddit: str) -> list[Post]:
+def get_latest_posts(last_post_id: str, subreddit: str) -> list:
     '''Returns the latest posts up until the last saved post, as a list.'''
     new_posts = []
 
@@ -74,10 +72,11 @@ def get_latest_posts(last_post_id: str, subreddit: str) -> list[Post]:
         if id == last_post_id:
             break
 
-        # fixed reddit class name for post-containers
-        container_class = "_1oQyIsiPHYt6nx7VOmd1sz _1RYN-7H8gYctjOQeL8p2Q7 scrollerItem _3Qkp11fjcAw9I9wtLo8frE _1qftyZQ2bhqP62lbPjoGAh " + id
-
-        new_post = Post(container_class, subreddit)
+        try:
+            new_post = Post(id, subreddit)
+        except AttributeError as error:
+            logger.error(f"Attribute error occurred: {error}")
+            break
         new_posts.append(new_post)
 
     # logging
@@ -85,32 +84,30 @@ def get_latest_posts(last_post_id: str, subreddit: str) -> list[Post]:
 
     return new_posts
 
-def get_last_post(subreddit: str) -> Post:
+
+def get_last_post(subreddit: str):
     '''Returns the newest post in the subreddit as a Post instance.'''
     id = posts_list[0]['data']['name']
-    
-    # fixed reddit class name for post-containers
-    container_class = "_1oQyIsiPHYt6nx7VOmd1sz _1RYN-7H8gYctjOQeL8p2Q7 scrollerItem _3Qkp11fjcAw9I9wtLo8frE _1qftyZQ2bhqP62lbPjoGAh " + id
 
-    new_post = Post(container_class, subreddit)
-    
+    new_post = Post(id, subreddit)
+
     return new_post
 
+
 class Post:
-    def __init__(self, container_class: str, subreddit: str):
+    def __init__(self, id: str, subreddit: str):
         self.subreddit = subreddit
-        self.container_class = container_class
-        self.post_id = container_class.split(" ")[-1].strip()
-        self.upvotes = self.get_upvotes(container_class)
-        self.time_posted = self.get_time_posted(container_class)
-        self.author = self.get_author(container_class, subreddit)
-        self.title = self.get_title(container_class)
-        self.content = self.get_content(container_class)
+        self.post_id = id
+        self.upvotes = self.get_upvotes(id)
+        self.time_posted = self.get_time_posted(id)
+        self.author = self.get_author(id)
+        self.title = self.get_title(id)
+        self.content = self.get_content(id)
 
     @classmethod
-    def get_content(post_container_class: str) -> str:
+    def get_content(self, id: str) -> str:
         '''Returns the text description as a string.'''
-        post_content = soup.find("div", class_=post_container_class).find(
+        post_content = self.get_post_instance(id).find(
             "div", class_="STit0dLageRsa2yR4te_b")
         try:
             # support for text
@@ -125,56 +122,54 @@ class Post:
         return content
 
     @classmethod
-    def get_title(post_container_class: str) -> str:
+    def get_title(self, id: str) -> str:
         '''Returns the title of the post.'''
-        post = soup.find("div", class_=post_container_class)
+        post = self.get_post_instance(id)
 
         title = post.find("h3", class_="_eYtD2XCVieq6emjKBH3m").text
 
         return title
 
     @classmethod
-    def get_author(post_container_class: str) -> str:
+    def get_author(self, id: str) -> str:
         '''Returns the author of the post.'''
-        post = soup.find("div", class_=post_container_class)
-
-        post_id = post_container_class.split(' ')[-1].strip()
+        post = self.get_post_instance(id)
 
         author = ""
 
         for post in posts_list:
-            id = post['data']['name']
-            if id == post_id:
+            id_ = post['data']['name']
+            if id_ == id:
                 author = post['data']['author']
                 break
 
         return author
 
     @classmethod
-    def get_time_posted(post_container_class: str) -> str:
+    def get_time_posted(self, id: str) -> str:
         '''Returns the timestamp of the moment the post was uploaded.'''
-        post = soup.find("div", class_=post_container_class)
 
-        time_ = post.find("span", class_="_2VF2J19pUIMSLJFky-7PEI").text
+        for post in posts_list:
+            id_ = post['data']['name']
+            if id_ == id:
+                time = post['data']['created_utc']
+                break
 
-        temp_list = time_.split(" ")
-
-        time_posted = time_
-        if temp_list[1] == "second" or temp_list[1] == "seconds":
-            time_posted = time.time() - int(temp_list[0])
-            time_posted = str(int(time_posted))
-        elif temp_list[1] == "minute" or temp_list[1] == "minutes":
-            time_posted = time.time() - int(temp_list[0])*60
-            time_posted = str(int(time_posted))
-        # other cases not needed
-        return time_posted
+        return time
 
     @classmethod
-    def get_upvotes(post_container_class: str) -> str:
+    def get_upvotes(self, id: str) -> str:
         '''Returns the given posts upvote count as a string.'''
-        post = soup.find("div", class_=post_container_class)
+        post = self.get_post_instance(id)
 
         upvotes = post.find(
             "div", class_="_1rZYMD_4xY3gRcSS3p8ODO _3a2ZHWaih05DgAOtvu6cIo").text
 
         return upvotes
+
+    @classmethod
+    def get_post_instance(self, id: str):
+
+        post = soup.find("div", id=id)
+
+        return post

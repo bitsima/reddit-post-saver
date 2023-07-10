@@ -22,19 +22,23 @@ def real_time_check() -> None:
     '''Works in the background in order to check the tracked subreddits for new posts each new second passed.'''
 
     # logging
-    logger.info("Real-time check started with 1 second interval.")
+    logger.info("Real-time check started with 0.1 second interval.")
 
     while True:
         subreddits_list = database_handler.get_subreddits_list()
-        scraper.get_main_page()
+        print("---")
+        if len(subreddits_list) == 0:
+            break
 
         for sub in subreddits_list:
+            scraper.get_main_page(sub)
+
             latest_post_id = database_handler.get_latest_post_id(sub)
 
-            new_posts = scraper.get_latest_posts(latest_post_id)
+            new_posts = scraper.get_latest_posts(latest_post_id, sub)
 
             if latest_post_id == "0":
-                post = scraper.get_last_post()
+                post = scraper.get_last_post(sub)
                 database_handler.add_to_db(post)
 
                 # logging
@@ -50,4 +54,4 @@ def real_time_check() -> None:
                 logger.info(
                     f"Post '{post.post_id}' added to posts table from subreddit '{sub}'.")
 
-        time.sleep(1)
+            time.sleep(0.1)
