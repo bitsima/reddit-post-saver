@@ -39,8 +39,13 @@ def get_main_page(subreddit_name: str) -> None:
         url_2 = f"https://www.reddit.com/r/{subreddit_name}/new/.json"
 
         # getting the json data of the main page
-        json_data = requests.get(url_2, headers=headers).text
+        response = requests.get(url_2, headers=headers)
+        
+        #making sure subreddit name is true
+        if response.status_code != 200:
+            return 1
 
+        json_data = response.text
         # getting the html data of the main page
         html_text = requests.get(url, headers=headers).text
 
