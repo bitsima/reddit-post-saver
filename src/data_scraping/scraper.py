@@ -17,7 +17,7 @@ soup = ""
 posts_list = []
 
 
-def get_main_page(subreddit_name: str) -> None:
+def get_main_page(subreddit_name: str) -> int:
     '''Sets the given subreddits main page html data as a global variable.'''
 
     global soup
@@ -61,6 +61,8 @@ def get_main_page(subreddit_name: str) -> None:
     # logging
     logger.info(
         f"Retrieved main page of subreddit '{subreddit_name}' with user agent '{the_user_agent}'.")
+
+    return 0
 
 
 def get_latest_posts(last_post_id: str, subreddit: str) -> list[Post]:
